@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Shaar Menashe//Clinical Criminology Study Day//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:kirot-noflim-20261207@shaar-menashe
+DTSTAMP:20261013T000000Z
+DTSTART:20261207T063000Z
+DTEND:20261207T113000Z
+SUMMARY:יום עיון: קירות נופלים בטיפול
+LOCATION:אולם ע"ש בלה שניידר\, המרכז לבריאות הנפש שער מנשה
+DESCRIPTION:יום העיון השנתי של סקטור קרימינולוגים קליניים. התכנסות וכיבוד
+  בוקר ב-8:30.
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:מחר: יום עיון קירות נופלים בטיפול
+END:VALARM
+END:VEVENT
+END:VCALENDAR

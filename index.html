@@ -255,6 +255,11 @@
       color: var(--ink-soft); font-size: 1rem;
     }
     .cost-note strong { color: var(--ink); }
+    .cost-note p { margin: 0; }
+    .check { display: flex; gap: 12px; align-items: flex-start; margin: 0; cursor: pointer; font-weight: 600; color: var(--ink); }
+    .check input { flex: none; width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
+    .check input[aria-invalid="true"] { outline: 2px solid var(--danger); outline-offset: 2px; }
+    .cost-note .hint { margin: 6px 34px 0 0; }
 
     .hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -594,7 +599,17 @@
                 <p class="field-error" id="err-student"></p>
               </fieldset>
 
-              <p class="cost-note" id="cost-note" aria-live="polite"><strong>דמי השתתפות: 50 ₪</strong> במזומן בעת ההגעה. לעובדי שער מנשה ולסטודנטים לקרימינולוגיה קלינית – ללא עלות.</p>
+              <div class="cost-note" aria-live="polite">
+                <p id="cost-free" hidden><strong>השתתפות ללא עלות</strong> – לסטודנטים לקרימינולוגיה קלינית.</p>
+                <div id="cost-paid">
+                  <label class="check" for="cashAck">
+                    <input type="checkbox" id="cashAck" name="cashAck" value="כן" aria-describedby="cash-hint err-cashAck">
+                    <span>הבנתי שעליי להביא <strong>50 ₪ במזומן</strong> ליום העיון<span class="req" aria-hidden="true">*</span></span>
+                  </label>
+                  <p class="hint" id="cash-hint">התשלום במזומן בלבד, בעת ההגעה והרישום. עובדי המרכז לבריאות הנפש שער מנשה – פטורים.</p>
+                  <p class="field-error" id="err-cashAck"></p>
+                </div>
+              </div>
 
               <div class="hp" aria-hidden="true">
                 <label for="website">אין למלא שדה זה</label>
@@ -698,7 +713,6 @@
       const form = document.getElementById('reg-form');
       const btn = document.getElementById('submit-btn');
       const status = document.getElementById('form-status');
-      const costNote = document.getElementById('cost-note');
       const studentGroup = document.getElementById('student-group');
       let sending = false;
 
@@ -717,7 +731,8 @@
         },
         profession: required('נא למלא מקצוע'),
         workplace: required('נא למלא מקום עבודה'),
-        student: v => v ? '' : 'נא לבחור כן או לא'
+        student: v => v ? '' : 'נא לבחור כן או לא',
+        cashAck: v => (v || value('student') === 'כן') ? '' : 'נא לסמן שהבנת שיש להביא 50 ₪ במזומן'
       };
 
       function setError(name, msg) {
@@ -728,8 +743,9 @@
       }
 
       function value(name) {
-        const v = form.elements[name].value;
-        return typeof v === 'string' ? v : '';
+        const el = form.elements[name];
+        if (el.type === 'checkbox') return el.checked ? el.value : '';
+        return typeof el.value === 'string' ? el.value : '';
       }
 
       function validate() {
@@ -745,7 +761,7 @@
       // ניקוי שגיאה בזמן הקלדה
       Object.keys(rules).forEach(name => {
         const el = form.elements[name];
-        const evt = name === 'student' ? 'change' : 'input';
+        const evt = name === 'student' || name === 'cashAck' ? 'change' : 'input';
         (el.length && name === 'student' ? Array.from(el) : [el]).forEach(node =>
           node.addEventListener(evt, () => {
             if (document.getElementById('err-' + name).textContent) setError(name, rules[name](value(name)));
@@ -753,11 +769,12 @@
         );
       });
 
-      // הודעת עלות לפי סטטוס סטודנט
+      // סטודנטים – ללא עלות; כל השאר – חובה לאשר הבאת 50 ₪ במזומן
       form.querySelectorAll('input[name="student"]').forEach(r => r.addEventListener('change', () => {
-        costNote.innerHTML = r.value === 'כן' && r.checked
-          ? '<strong>השתתפות ללא עלות</strong> – לסטודנטים לקרימינולוגיה קלינית.'
-          : '<strong>דמי השתתפות: 50 ₪</strong> במזומן בעת ההגעה. לעובדי המרכז לבריאות הנפש שער מנשה – ללא עלות.';
+        const free = value('student') === 'כן';
+        document.getElementById('cost-free').hidden = !free;
+        document.getElementById('cost-paid').hidden = free;
+        if (free) setError('cashAck', '');
       }));
 
       function setSending(on) {
